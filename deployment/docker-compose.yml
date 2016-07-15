@@ -1,0 +1,37 @@
+version: '2'
+
+networks:
+  default:
+    driver: bridge
+
+services:
+    datafs:
+        image: busybox:1.24.2
+        volumes:
+          - /data 
+          - /var/lib/mysql
+        command: tail -f /dev/null
+        container_name: datafs
+
+    mysql:
+        image: mysql/mysql-server:5.7
+        environment:
+          MYSQL_USER: root
+          MYSQL_ROOT_PASSWORD: my-secret-pw
+        ports:
+          - 3306:3306
+        volumes:
+          - ./../../backup:/backup
+        volumes_from:
+          - datafs
+        container_name: mysql
+
+    app:
+        build: ./revel
+        image: abc/app:0.0.1
+        links:
+            - mysql
+        ports:
+            - 9000:9000
+        container_name: app
+    
